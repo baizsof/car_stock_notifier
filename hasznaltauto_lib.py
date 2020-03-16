@@ -2,27 +2,29 @@ import urllib.request
 import urllib.parse
 import re
 
-def parse_cars(url):
-    first_page_html = get_html(url)
-    urls = [first_page_html, __parse_all_pages_url(first_page_html)]
-
+def parse_cars(base_url):
     cars = []
-    for url in urls:
-        current_cars = __parse_page_cars(url)
-        cars.extend(current_cars)
+    is_exit = False
+    page = 1
+    while is_exit == False:
+        current_url = create_url(base_url, page)
+        try:
+            current_cars = __parse_page_cars(current_url)
+            cars.extend(current_cars)
+            page += 1
+        except Exception:
+            is_exit = True
 
     return cars
 
-def get_html(url):
-    f = urllib.request.urlopen(url)
-    return f.read().decode('utf-8')
-
-
-def __parse_all_pages_url(html):
-    urls = re.findall('(https:\/\/www\.hasznaltauto.hu\/talalatilista\/page.*?)"', html)
-    return urls
+def create_url(base_url, page_number):
+    return '{}/page{}'.format(base_url, page_number)
 
 def __parse_page_cars(url):
     html = get_html(url);
     cars = re.findall("contentId.*?(\d+)", html)
     return cars
+
+def get_html(url):
+    f = urllib.request.urlopen(url)
+    return f.read().decode('utf-8')
